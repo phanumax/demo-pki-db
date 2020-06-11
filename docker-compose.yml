@@ -1,0 +1,47 @@
+version: '3'
+services:
+  nginx:
+    restart: always
+    build:
+      dockerfile: Dockerfile
+      context: ./nginx
+    environment:
+      - TZ=Asia/Bangkok
+    ports:
+      - '80:80'
+      - '443:443'
+    volumes:
+      - './nginx/default.conf:/etc/nginx/conf.d/default.conf'
+      - './nginx/certificate.crt:/etc/ssl/certificate.crt'
+      - './nginx/thaitv3.com.key:/etc/ssl/private/example.com.key:ro'
+    networks:
+      ejbca-net:
+  web:
+    restart: always
+    build:
+      dockerfile: Dockerfile
+      context: ./web
+    environment:
+      - TZ=Asia/Bangkok
+    volumes:
+      - './web/conf.d:/etc/nginx/conf.d'
+      - './web/src:/var/www/html'
+    networks:
+      ejbca-net:
+  ejbca:
+    hostname: ejbca-node1
+    restart: always
+    build:
+      dockerfile: Dockerfile
+      context: ./caserver
+    environment:
+      - PROXY_HTTP_BIND=0.0.0.0
+      - INITIAL_ADMIN=;PublicAccessAuthenticationToken:TRANSPORT_ANY;
+    networks:
+      ejbca-net:
+
+networks:
+  ejbca-net:
+    driver: bridge
+    ipam:
+      driver: default

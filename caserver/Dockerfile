@@ -1,0 +1,1 @@
+FROM primekey/ejbca-ce:latest
