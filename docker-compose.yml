@@ -1,6 +1,42 @@
 version: '3'
 services:
+  mariadb:
+    container_name: ejbca-db
+    hostname: ejbca-db
+    restart: always
+    build:
+      dockerfile: Dockerfile
+      context: ./db
+    environment:
+      - TZ=Asia/Bangkok
+      - MYSQL_ROOT_PASSWORD=foo12345
+      - MYSQL_DATABASE=ejbca
+      - MYSQL_USER=ejbca
+      - MYSQL_PASSWORD=foo12345
+    volumes:
+      - './db/datadir:/var/lib/mysql'
+    networks:
+      ejbca-net:
+  ejbca:
+    container_name: ejbca-node1
+    hostname: ejbca-node1
+    restart: always
+    build:
+      dockerfile: Dockerfile
+      context: ./caserver
+    environment:
+      - PROXY_HTTP_BIND=0.0.0.0
+      - INITIAL_ADMIN=;PublicAccessAuthenticationToken:TRANSPORT_ANY;
+      - DATABASE_JDBC_URL=jdbc:mysql://mariadb:3306/ejbca?characterEncoding=UTF-8
+      - DATABASE_USER=ejbca
+      - DATABASE_PASSWORD=foo12345
+    depends_on:
+      - mariadb 
+    networks:
+      ejbca-net:
   nginx:
+    container_name: nginx1
+    hostname: nginx1
     restart: always
     build:
       dockerfile: Dockerfile
@@ -17,6 +53,8 @@ services:
     networks:
       ejbca-net:
   web:
+    container_name: crlweb
+    hostname: crlweb
     restart: always
     build:
       dockerfile: Dockerfile
@@ -28,17 +66,7 @@ services:
       - './web/src:/var/www/html'
     networks:
       ejbca-net:
-  ejbca:
-    hostname: ejbca-node1
-    restart: always
-    build:
-      dockerfile: Dockerfile
-      context: ./caserver
-    environment:
-      - PROXY_HTTP_BIND=0.0.0.0
-      - INITIAL_ADMIN=;PublicAccessAuthenticationToken:TRANSPORT_ANY;
-    networks:
-      ejbca-net:
+  
 
 networks:
   ejbca-net:
