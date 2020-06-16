@@ -1,1 +1,1 @@
-# demo-pki-db
+# demo PKI with ejbca, mariadb
